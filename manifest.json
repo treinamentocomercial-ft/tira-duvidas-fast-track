@@ -1,0 +1,19 @@
+{
+  "name": "Tira-Dúvidas Fast Track",
+  "short_name": "Tira-Dúvidas FT",
+  "description": "Dúvidas operacionais do Fast Track — formulários, ranking de KPI, presença, Bitrix e contatos, direto no celular.",
+  "id": "./index.html",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F6F5FA",
+  "theme_color": "#5B2A86",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

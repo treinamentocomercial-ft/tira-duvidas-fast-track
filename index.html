@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tira-Dúvidas Fast Track</title>
+<meta name="description" content="Dúvidas operacionais do Fast Track — formulários, ranking de KPI, presença, Bitrix e contatos, direto no celular.">
+<!-- Tags de PWA (app instalável): válidas só quando este arquivo está
+     hospedado num link https junto com manifest.json, service-worker.js
+     e os ícones (icon-192.png, icon-512.png, apple-touch-icon.png). Se
+     algum desses arquivos não estiver junto (ex.: abrindo este HTML
+     avulso), o navegador ignora essas tags/o registro do service worker
+     silenciosamente e a ferramenta funciona normal, só sem virar app. -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#5B2A86">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tira-Dúvidas FT">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#F6F5FA;
+  --surface:#FFFFFF;
+  --surface-2:#EEEBF6;
+  --border:#DEDAEA;
+  --ink:#1A1425;
+  --ink-soft:#615A73;
+  --ink-faint:#8B84A0;
+  --accent:#5B2A86;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EEE4F7;
+  --accent-soft-ink:#4A2270;
+  --bot-bubble:#EEEBF6;
+  --user-bubble:#5B2A86;
+  --user-bubble-ink:#FFFFFF;
+  --warn-bg:#FBF0DE;
+  --warn-border:#E6B564;
+  --warn-ink:#7A4A12;
+  --wa-bg:#E3F6E8;
+  --wa-bg-hover:#D3F0DB;
+  --wa-border:#B9E5C4;
+  --wa-ink:#1F7A3D;
+  --shadow:0 1px 2px rgba(26,20,37,0.05), 0 8px 24px -12px rgba(26,20,37,0.14);
+  --radius:14px;
+  color-scheme:light only;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.55;
+  height:100%;
+}
+html{height:100%;}
+h1,h2,h3,h4{
+  font-family:"Archivo",system-ui,sans-serif;
+  margin:0;
+  text-wrap:balance;
+}
+button{font-family:inherit;}
+/* ---------- Header ---------- */
+.topbar{
+  padding:16px 20px;
+  padding-top:calc(16px + env(safe-area-inset-top,0px));
+  border-bottom:1px solid var(--border);
+  background:var(--bg);
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.brand{display:flex;align-items:baseline;gap:10px;}
+.brand-mark{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.08em;
+  color:var(--accent);
+  background:var(--accent-soft);
+  padding:3px 7px;
+  border-radius:6px;
+}
+.brand-title{font-size:18px;font-weight:800;letter-spacing:-0.01em;}
+.brand-sub{font-size:12.5px;color:var(--ink-faint);flex:1 1 auto;}
+.nav-toggle{
+  display:none;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:12px;
+  font-weight:600;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--ink-soft);
+  border-radius:8px;
+  padding:8px 10px;
+  cursor:pointer;
+}
+/* ---------- Layout ---------- */
+.app{
+  max-width:1180px;
+  margin:0 auto;
+  padding-inline:20px;
+  display:grid;
+  grid-template-columns:280px 1fr;
+  gap:20px;
+  align-items:start;
+  padding-block:20px;
+}
+.sidebar{
+  position:sticky;
+  top:20px;
+  max-height:calc(100vh - 40px);
+  overflow-y:auto;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px;
+}
+.sidebar-title{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+  padding:2px 6px 10px;
+}
+.cat-block{margin-bottom:6px;}
+.cat-head{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  background:none;
+  border:none;
+  text-align:left;
+  padding:9px 8px;
+  border-radius:8px;
+  font-size:13px;
+  font-weight:600;
+  color:var(--ink);
+  cursor:pointer;
+}
+.cat-head:hover{background:var(--surface-2);}
+.cat-head .chev{
+  color:var(--ink-faint);
+  font-size:11px;
+  transition:transform .15s ease;
+  flex-shrink:0;
+}
+.cat-block.open .cat-head .chev{transform:rotate(90deg);}
+.cat-questions{
+  list-style:none;
+  margin:0;
+  padding:2px 0 8px 10px;
+  display:none;
+  flex-direction:column;
+  gap:2px;
+}
+.cat-block.open .cat-questions{display:flex;}
+.cat-questions button{
+  width:100%;
+  text-align:left;
+  background:none;
+  border:none;
+  border-left:2px solid var(--border);
+  padding:6px 10px;
+  font-size:12.5px;
+  color:var(--ink-soft);
+  cursor:pointer;
+  border-radius:0 6px 6px 0;
+}
+.cat-questions button:hover{background:var(--surface-2);color:var(--ink);border-left-color:var(--accent);}
+.cat-questions button.draft::after{
+  content:" · rascunho";
+  color:var(--warn-ink);
+  font-size:11px;
+}
+/* ---------- Chat ---------- */
+.chat-wrap{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  height:calc(100vh - 40px);
+  min-height:480px;
+  overflow:hidden;
+}
+.chat-scroll{
+  flex:1 1 auto;
+  overflow-y:auto;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.msg{display:flex;gap:10px;max-width:85%;}
+.msg.bot{align-self:flex-start;}
+.msg.user{align-self:flex-end;flex-direction:row-reverse;}
+.avatar{
+  flex-shrink:0;
+  width:30px;
+  height:30px;
+  border-radius:9px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:11px;
+  font-weight:700;
+}
+.msg.bot .avatar{background:var(--accent);color:var(--accent-ink);}
+.msg.user .avatar{background:var(--surface-2);color:var(--ink-soft);}
+.bubble{
+  border-radius:14px;
+  padding:11px 14px;
+  font-size:13.5px;
+  white-space:pre-line;
+}
+.msg.bot .bubble{
+  background:var(--bot-bubble);
+  color:var(--ink);
+  border-top-left-radius:4px;
+}
+.msg.user .bubble{
+  background:var(--user-bubble);
+  color:var(--user-bubble-ink);
+  border-top-right-radius:4px;
+}
+.bubble a{color:var(--accent);font-weight:600;word-break:break-all;}
+.msg.user .bubble a{color:inherit;text-decoration-color:currentColor;}
+.bubble .draft-tag{
+  display:inline-block;
+  margin-top:8px;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:10.5px;
+  font-weight:600;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  color:var(--warn-ink);
+  background:var(--warn-bg);
+  border:1px solid var(--warn-border);
+  border-radius:6px;
+  padding:2px 7px;
+}
+.bubble .related-label{
+  margin-top:10px;
+  font-size:11.5px;
+  color:var(--ink-faint);
+}
+.wa-buttons{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+.wa-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:var(--wa-bg);
+  color:var(--wa-ink);
+  border:1px solid var(--wa-border);
+  border-radius:999px;
+  padding:7px 13px;
+  font-size:12.5px;
+  font-weight:600;
+  text-decoration:none;
+  line-height:1.2;
+}
+.wa-btn:hover{background:var(--wa-bg-hover);}
+.suggestions{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-top:8px;
+}
+.suggestions button{
+  text-align:left;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:7px 10px;
+  font-size:12.5px;
+  color:var(--accent);
+  cursor:pointer;
+}
+.suggestions button:hover{border-color:var(--accent);background:var(--accent-soft);}
+.option-buttons{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-top:10px;
+}
+.option-btn{
+  text-align:left;
+  background:var(--accent-soft);
+  border:1px solid var(--accent-soft);
+  border-radius:8px;
+  padding:8px 11px;
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--accent-soft-ink);
+  cursor:pointer;
+}
+.option-btn:hover{border-color:var(--accent);}
+.chips-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  padding:0 20px 16px;
+}
+.chip{
+  background:var(--accent-soft);
+  color:var(--accent-soft-ink);
+  border:none;
+  border-radius:999px;
+  padding:7px 13px;
+  font-size:12.5px;
+  font-weight:600;
+  cursor:pointer;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.chip:hover{filter:brightness(0.96);}
+.chat-input-row{
+  border-top:1px solid var(--border);
+  padding:14px 16px;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  display:flex;
+  gap:10px;
+  flex-shrink:0;
+}
+.chat-input{
+  flex:1 1 auto;
+  font-family:inherit;
+  font-size:14px;
+  color:var(--ink);
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:11px 14px;
+}
+.chat-input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.send-btn{
+  background:var(--accent);
+  color:var(--accent-ink);
+  border:none;
+  border-radius:10px;
+  padding:0 18px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  flex-shrink:0;
+}
+.send-btn:hover{filter:brightness(1.06);}
+.escalation{
+  font-size:12px;
+  color:var(--ink-faint);
+  text-align:center;
+  padding:0 20px 14px;
+}
+/* ---------- Responsive ---------- */
+@media (max-width:860px){
+  .app{grid-template-columns:1fr;padding-inline:12px;padding-block:12px;gap:12px;}
+  .nav-toggle{display:inline-block;}
+  .brand-sub{display:none;}
+  .sidebar{
+    position:static;
+    max-height:none;
+    display:none;
+  }
+  .sidebar.open{display:block;}
+  .chat-wrap{
+    height:calc(100vh - 96px);
+    height:calc(100dvh - 96px);
+  }
+  .chat-scroll{padding:14px;}
+  .chips-row{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding:0 14px 14px;
+  }
+  .chips-row::-webkit-scrollbar{display:none;}
+  .msg{max-width:92%;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="brand-mark">24H</span>
+    <span class="brand-title">Tira-Dúvidas Fast Track</span>
+  </div>
+  <span class="brand-sub">Dúvidas operacionais do programa — não substitui o capitão</span>
+  <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false">Perguntas</button>
+</div>
+
+<div class="app">
+  <nav class="sidebar" id="sidebar" aria-label="Perguntas frequentes por tema">
+    <div class="sidebar-title">Perguntas frequentes</div>
+    <div id="catList"></div>
+  </nav>
+
+  <div class="chat-wrap">
+    <div class="chat-scroll" id="chatScroll"></div>
+    <div class="chips-row" id="chipsRow"></div>
+    <div class="chat-input-row">
+      <input type="text" class="chat-input" id="chatInput" placeholder="Digite sua dúvida…" aria-label="Digite sua dúvida">
+      <button class="send-btn" id="sendBtn" type="button">Enviar</button>
+    </div>
+    <div class="escalation">🔒 Não peça nem envie dados sensíveis aqui (senha, CPF, cartão, dados bancários). Não achou o que precisava? Fale com a Íris ou com o capitão da sua turma.</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.6.2/fuse.min.js"></script>
+<script>
+/* =========================================================================
+   CONTEÚDO DO FAQ
+   Para adicionar/editar uma pergunta: edite o array FAQ_DATA.faqs abaixo.
+   Cada item: { id, cat, q (pergunta canônica), variants (frases parecidas
+   que os assessores podem digitar), a (resposta, aceita quebras de linha
+   com \n), links (lista de textos simples de material relacionado),
+   draft (true = marca como rascunho/a validar) }.
+   Se a resposta tem vários casos diferentes (ex.: "depende do que
+   aconteceu com você"), em vez de jogar tudo junto use "options": uma
+   lista de { label (texto do botão), a (resposta só desse caso), buttons
+   (opcional) } — o campo "a" do item vira só a frase de introdução, e o
+   assessor escolhe o caso dele clicando num botão.
+   Para adicionar uma categoria nova, edite FAQ_DATA.categories.
+   ========================================================================= */
+const FAQ_DATA = {
+  "categories": [
+    {
+      "id": "formularios",
+      "label": "Formulários (Forms)",
+      "icon": "file-text"
+    },
+    {
+      "id": "estrutura",
+      "label": "Estrutura do Fast Track",
+      "icon": "map"
+    },
+    {
+      "id": "kpi",
+      "label": "Ranking de KPI",
+      "icon": "target"
+    },
+    {
+      "id": "presenca",
+      "label": "Presença e EAD",
+      "icon": "calendar"
+    },
+    {
+      "id": "plataformas",
+      "label": "Plataformas e links úteis",
+      "icon": "tool"
+    },
+    {
+      "id": "contato",
+      "label": "Contato e escalonamento",
+      "icon": "phone"
+    }
+  ],
+  "faqs": [
+    {
+      "id": "form-avaliacao-lider",
+      "cat": "formularios",
+      "q": "Qual o link do formulário de Avaliação do Líder?",
+      "variants": [
+        "avaliação do líder",
+        "formulário avaliação líder",
+        "avaliar meu capitão"
+      ],
+      "a": "Claro! Aqui está: https://forms.cloud.microsoft/r/XmWL99E0PC\n\nEsse link vale pras Turmas 37, 38 e 40. A Turma 39 (Reconvocados) não tem esse formulário nesse ciclo.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "form-entrega-tarefas",
+      "cat": "formularios",
+      "q": "Preciso do formulário de Entregáveis",
+      "variants": [
+        "formulário de entrega de tarefas",
+        "link da entrega de tarefas",
+        "entregáveis formulário",
+        "form de entregáveis"
+      ],
+      "a": "Claro, qual é a sua turma?",
+      "links": [],
+      "needsTurma": true,
+      "turmaPrompt": "Claro, qual é a sua turma?",
+      "turmaAnswerPrefix": "Segue o link do formulário de entregáveis da sua turma:",
+      "turmaLinks": {
+        "38": "https://forms.cloud.microsoft/r/RqfHzQECNx",
+        "40": "https://forms.cloud.microsoft/r/8YHYz2miha"
+      },
+      "turmaUnavailable": {
+        "39": "A Turma 39 (Reconvocados) não tem um formulário próprio de Entrega de Tarefas nesse ciclo — se você precisa entregar algo, confirme com seu capitão.",
+        "37": "A Turma 37 já encerrou o Fast Track — esse link não está mais ativo. Se ainda precisar dele, fale com seu capitão."
+      },
+      "turmaFollowUp": "Caso tenha dúvida sobre como preencher corretamente ou como sua resposta é validada, é só perguntar.",
+      "draft": false,
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "form-fp-client",
+      "cat": "formularios",
+      "q": "Preciso do formulário de FP Client",
+      "variants": [
+        "formulário fp client",
+        "link do fp client",
+        "fp client form"
+      ],
+      "a": "Claro, qual é a sua turma?",
+      "links": [],
+      "needsTurma": true,
+      "turmaPrompt": "Claro, qual é a sua turma?",
+      "turmaAnswerPrefix": "Segue o link do formulário de FP Client da sua turma:",
+      "turmaLinks": {
+        "37": "https://forms.cloud.microsoft/r/yvvWHP8kdf",
+        "38": "https://forms.cloud.microsoft/r/k5sLAnnwvC",
+        "39": "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=IYnNlFyPYkiDqK6qsGxAgvg1iEqxE2NJse2BoIGId5tUM0JCNjRFUTdRTzdWMDI0QlZRTzJHVVc1NS4u",
+        "40": "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=IYnNlFyPYkiDqK6qsGxAgvg1iEqxE2NJse2BoIGId5tURUJQOTRCV1VCTFNVME00TDhKU1ZaOTNTQS4u"
+      },
+      "turmaUnavailable": {},
+      "turmaFollowUp": "Caso tenha dúvida sobre como preencher corretamente ou como sua resposta é validada, é só perguntar.",
+      "draft": false,
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "duracao-fast-track",
+      "cat": "estrutura",
+      "q": "Quanto tempo dura o Fast Track?",
+      "variants": [
+        "quantos meses tem o fast track",
+        "duração do programa",
+        "quanto tempo até me formar"
+      ],
+      "a": "O treinamento ativo tem 2 meses (Mês 1 e Mês 2). Depois disso, o card vai para Aguardando certificado, onde a nota final é conferida — e só então para Concluído/Certificado, se a nota bater o mínimo exigido.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "nota-minima-certificacao",
+      "cat": "estrutura",
+      "q": "Qual a nota mínima para me certificar?",
+      "variants": [
+        "quanto preciso tirar pra me formar",
+        "nota de corte",
+        "preciso de quanto no ranking pra certificar"
+      ],
+      "a": "A nota final no Ranking de KPI precisa ser de pelo menos 81% para o card avançar de Aguardando certificado para Concluído/Certificado. Abaixo disso, o encerramento é registrado sem certificação.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "indicadores-ranking",
+      "cat": "kpi",
+      "q": "Quais indicadores contam no ranking de KPI?",
+      "variants": [
+        "o que é avaliado no ranking",
+        "quais métricas contam pra minha nota",
+        "indicadores do kpi"
+      ],
+      "a": "Os indicadores acompanhados são: volume de tentativa de ligação, volume de ligação atendida, reunião agendada, reunião realizada com planejamento financeiro, ativação de conta, captação bruta (Cap Bruta), reuniões Be Smart/parceiro, consumo de EAD, presença e entregáveis. O peso de cada um muda entre o Mês 1 e o Mês 2.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "o-que-conta-ativacao",
+      "cat": "kpi",
+      "q": "O que conta como 'Ativação de conta'?",
+      "variants": [
+        "quando uma conta é considerada ativada",
+        "ativação de conta regra"
+      ],
+      "a": "Conta com ativação mínima de R$100,00, ou uma troca de assessoria vinda de fora da InvestSmart. Não contam: conta aberta com menos de R$100,00, conta transferida com menos de R$100,00, ou conta que já estava na InvestSmart.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "cap-bruta-mes1",
+      "cat": "kpi",
+      "q": "A Cap Bruta do Mês 1 conta pra minha meta?",
+      "variants": [
+        "captação bruta mês 1",
+        "cap bruta como funciona no primeiro mês"
+      ],
+      "a": "No Mês 1, Cap Bruta não tem meta própria (peso 0%). No Mês 2, ela é acumulada — soma a captação do Mês 1 com a do Mês 2 — e passa a valer 10% da Nota Final.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "consumo-ead",
+      "cat": "kpi",
+      "q": "O que conta como consumo de EAD?",
+      "variants": [
+        "meta de ead",
+        "quanto do ead eu preciso terminar"
+      ],
+      "a": "É acompanhado conforme a tabela de progresso do programa vigente (trilha Comercial e Be Smart no Mês 1; trilha de Alocações no Mês 2). A meta de referência é 65% de consumo em cada mês.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "numeros-nao-batem-kpi",
+      "cat": "kpi",
+      "q": "Meus números não estão refletindo no ranking de KPI",
+      "variants": [
+        "kpi errado",
+        "meu número não bateu no ranking",
+        "captação não apareceu no ranking",
+        "ligações não contaram",
+        "entregável não foi contabilizado",
+        "ead não apareceu no ranking",
+        "ranking desatualizado"
+      ],
+      "a": "Boa pergunta! Isso pode acontecer por alguns motivos diferentes — escolha abaixo qual número está divergente pra eu te explicar certinho:",
+      "links": [],
+      "options": [
+        {
+          "id": "captacao-ativacao",
+          "label": "Captação ou Ativação de conta",
+          "a": "Os dados que alimentam o ranking têm uma janela de atraso no envio pela XP. Manda pro seu capitão os números reais de ativação e captação com o comprovante — ele lança manualmente.",
+          "buttons": [
+            {
+              "label": "💬 Yuri de Carvalho — Turma 38",
+              "url": "https://wa.me/5521980963410"
+            },
+            {
+              "label": "💬 Rafael Bertelli — Turma 38",
+              "url": "https://wa.me/553584016188"
+            },
+            {
+              "label": "💬 Pollyanna Antunes — Turma 38",
+              "url": "https://wa.me/558488422910"
+            },
+            {
+              "label": "💬 Hudson Machado — Turma 39",
+              "url": "https://wa.me/5511971170142"
+            },
+            {
+              "label": "💬 Mariana Maia — Turma 40",
+              "url": "https://wa.me/5521995419132"
+            },
+            {
+              "label": "💬 Eros Fonseca — Turma 40",
+              "url": "https://wa.me/558699501096"
+            },
+            {
+              "label": "💬 Julia Siqueira",
+              "url": "https://wa.me/5521970345408"
+            },
+            {
+              "label": "💬 Ravel Brito",
+              "url": "https://wa.me/5512996689043"
+            }
+          ],
+          "links": []
+        },
+        {
+          "id": "ligacoes",
+          "label": "Ligações feitas/atendidas divergentes",
+          "a": "Avisa seu capitão sobre a divergência, junto com o seu nome cadastrado no Bitrix, pra ele conseguir verificar.",
+          "buttons": [
+            {
+              "label": "💬 Yuri de Carvalho — Turma 38",
+              "url": "https://wa.me/5521980963410"
+            },
+            {
+              "label": "💬 Rafael Bertelli — Turma 38",
+              "url": "https://wa.me/553584016188"
+            },
+            {
+              "label": "💬 Pollyanna Antunes — Turma 38",
+              "url": "https://wa.me/558488422910"
+            },
+            {
+              "label": "💬 Hudson Machado — Turma 39",
+              "url": "https://wa.me/5511971170142"
+            },
+            {
+              "label": "💬 Mariana Maia — Turma 40",
+              "url": "https://wa.me/5521995419132"
+            },
+            {
+              "label": "💬 Eros Fonseca — Turma 40",
+              "url": "https://wa.me/558699501096"
+            },
+            {
+              "label": "💬 Julia Siqueira",
+              "url": "https://wa.me/5521970345408"
+            },
+            {
+              "label": "💬 Ravel Brito",
+              "url": "https://wa.me/5512996689043"
+            }
+          ],
+          "links": []
+        },
+        {
+          "id": "entregaveis",
+          "label": "Entregáveis",
+          "a": "Confira se você preencheu o formulário com o e-mail certo. Se mesmo assim não foi contabilizado, notifica seu capitão.",
+          "buttons": [
+            {
+              "label": "💬 Yuri de Carvalho — Turma 38",
+              "url": "https://wa.me/5521980963410"
+            },
+            {
+              "label": "💬 Rafael Bertelli — Turma 38",
+              "url": "https://wa.me/553584016188"
+            },
+            {
+              "label": "💬 Pollyanna Antunes — Turma 38",
+              "url": "https://wa.me/558488422910"
+            },
+            {
+              "label": "💬 Hudson Machado — Turma 39",
+              "url": "https://wa.me/5511971170142"
+            },
+            {
+              "label": "💬 Mariana Maia — Turma 40",
+              "url": "https://wa.me/5521995419132"
+            },
+            {
+              "label": "💬 Eros Fonseca — Turma 40",
+              "url": "https://wa.me/558699501096"
+            },
+            {
+              "label": "💬 Julia Siqueira",
+              "url": "https://wa.me/5521970345408"
+            },
+            {
+              "label": "💬 Ravel Brito",
+              "url": "https://wa.me/5512996689043"
+            }
+          ],
+          "links": []
+        },
+        {
+          "id": "ead",
+          "label": "Consumo de EAD",
+          "a": "Alguns assessores foram cadastrados numa trilha diferente da trilha de Assessores na Smart Academy, então o progresso não aparece contabilizado ao longo do mês. Mas fica tranquilo — a equipe operacional do Fast Track verifica assessor por assessor, e no fim do mês seu progresso (em qualquer trilha que você esteja) é contabilizado e refletido no ranking.",
+          "links": [],
+          "buttons": []
+        }
+      ],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": []
+    },
+    {
+      "id": "o-que-conta-falta",
+      "cat": "presenca",
+      "q": "O que conta como falta ou presença numa aula?",
+      "variants": [
+        "como é medida a presença",
+        "presença como funciona",
+        "o que conta falta"
+      ],
+      "a": "A presença é calculada pelo tempo real de conexão registrado no Zoom durante a sessão, comparado com a meta de 75% da duração da sala naquele dia. Se você ficou conectado por tempo suficiente, conta como Presença; senão, Falta.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "perdi-aula",
+      "cat": "presenca",
+      "q": "Perdi uma aula, o que eu faço?",
+      "variants": [
+        "faltei numa aula obrigatória",
+        "posso repor uma aula"
+      ],
+      "a": "Fala com seu capitão o quanto antes — ele confirma se existe gravação/material de reposição e como isso é registrado. A presença não é lançada manualmente sem a confirmação dele.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "link-smart-academy",
+      "cat": "plataformas",
+      "q": "Qual o link do Smart Academy (EAD)?",
+      "variants": [
+        "link do ead",
+        "smart academy link",
+        "onde acesso o ead",
+        "plataforma de ead"
+      ],
+      "a": "Aqui está: https://investsmart.melver.com.br/login\n\nSe for a primeira vez que você tá acessando, vá em \"Alterar senha\" antes de mais nada. Se tiver qualquer outro problema na plataforma, chama a Íris (suporte do Treinamento Comercial):",
+      "links": [],
+      "buttons": [
+        {
+          "label": "💬 Íris — Suporte geral InvestSmart",
+          "url": "https://wa.me/5521972646115"
+        }
+      ],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "options": []
+    },
+    {
+      "id": "link-bitrix",
+      "cat": "plataformas",
+      "q": "Qual o link do Bitrix24?",
+      "variants": [
+        "link do bitrix",
+        "onde acesso o bitrix",
+        "bitrix24 link"
+      ],
+      "a": "Aqui está: https://www.bitrix24.com.br/\n\nSe tiver dúvida sobre como usar a plataforma, pode perguntar aqui mesmo — já tenho o passo a passo de marcadores, ligações e importação da Lista 200. Pro tutorial completo com prints (documento interno, \"Tutorial Bitrix24 — Marcadores & Cadência\", v2.0), peça pro seu capitão.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "marcadores-bitrix",
+      "cat": "plataformas",
+      "q": "Qual marcador eu uso na tarefa do Bitrix depois do contato?",
+      "variants": [
+        "marcador certo bitrix",
+        "qual marcador usar",
+        "lista de marcadores bitrix",
+        "marcadores cadência",
+        "ligação significativa",
+        "no show r1",
+        "cliente não atendeu marcador"
+      ],
+      "a": "Ótima pergunta — escolher o marcador certo importa porque é ele que decide o próximo passo da cadência! Aqui está a lista completa:\n\nContato positivo: 01 Ligação Significativa · 02 WhatsApp Enviado · 08 R1 Realizada · 11 R2 Realizada\n\nAgendamento: 07 R1 Agendada · 10 R2 Agendada\n\nAtenção / risco: 09 No Show - R1 · 12 No Show - R2\n\nSem contato efetivo: 03 Ligação não significativa · 04 Cliente não Atendeu · 13 WhatsApp Inválido\n\nEncerramento: 05 Número Inválido · 06 Perdido\n\nEscolha sempre o que reflete o que realmente aconteceu no contato — marcador errado não trava o sistema, mas manda a cadência pro caminho errado.",
+      "links": [
+        "Tutorial Bitrix24 — Marcadores & Cadência (documento interno, peça pro seu capitão)"
+      ],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "como-ligar-bitrix",
+      "cat": "plataformas",
+      "q": "Como eu faço ligação pelo Bitrix?",
+      "variants": [
+        "ligar pelo bitrix",
+        "como discar no bitrix",
+        "telefonia bitrix",
+        "ligação direto pelo crm"
+      ],
+      "a": "Tem duas formas de ligar direto pelo Bitrix, sem precisar do celular pessoal:\n\n1) Ícone de telefone no card do Kanban — ao lado do nome do lead, clicar nele já inicia a ligação pro número cadastrado.\n\n2) Discador do Bitrix — clique no menu superior direito (perto do sininho de notificações) pra abrir a barra de navegação secundária, depois em \"Telefonia\". O painel de discagem abre, você digita ou copia o número e clica em \"Ligar\" (dá até pra escolher a linha de discagem no menu acima do botão).\n\nSe mesmo assim não estiver funcionando, dá uma olhada em \"Não consigo realizar ligação pelo Bitrix\" aqui no chat.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "importar-lista200-bitrix",
+      "cat": "plataformas",
+      "q": "Como eu importo a Lista 200 no Bitrix?",
+      "variants": [
+        "importar lista 200",
+        "lista 200 bitrix",
+        "subir planilha de leads",
+        "importar leads bitrix"
+      ],
+      "a": "Passo a passo rápido:\n\n1) Reúna os nomes e números da sua Lista 200 numa planilha em CSV.\n2) No Bitrix, vá em Leads pra abrir o pipeline.\n3) Clique no ícone de engrenagem ⚙ no canto superior direito do Kanban.\n4) Selecione \"Importar negócios\".\n5) Clique em \"Carregar arquivo\" e escolha sua planilha, depois \"Próximo\" pra mapear os campos.\n\nDuas coisas importantes antes de importar: confira se o campo Fonte está certo (\"Fast Track - Marketing\" ou \"Fast Track Orgânicos\") e se os telefones estão sem o +55 na frente — o +55 causa falha na discagem automática da cadência!\n\nDepois de importado, cada lead ainda precisa ser movido de \"Novos Leads\" pra \"Em Prospecção\" pra cadência começar a rodar.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "nao-consigo-ligar-bitrix",
+      "cat": "plataformas",
+      "q": "Não consigo realizar ligação pelo Bitrix",
+      "variants": [
+        "bitrix não liga",
+        "erro pra ligar no bitrix",
+        "não consigo discar no bitrix",
+        "telefonia do bitrix não funciona"
+      ],
+      "a": "Sem problema! Se você tiver dificuldade pra realizar ligações pela plataforma, usa seu próprio celular normalmente. Só manda pro seu capitão um print do histórico de ligações, pra que elas sejam contabilizadas no seu KPI, e relata o problema pra ele te ajudar a resolver.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "pra-que-serve-forms",
+      "cat": "plataformas",
+      "q": "Pra que serve o Microsoft Forms no Fast Track?",
+      "variants": [
+        "microsoft forms fast track",
+        "forms pra que serve"
+      ],
+      "a": "É usado para formulários oficiais do programa — por exemplo, a prova de nivelamento no início e o registro oficial de saída (feito pelo capitão). O passo a passo detalhado de uso ainda está sendo documentado nesta apostila.",
+      "links": [],
+      "draft": true,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "pra-que-serve-bitrix",
+      "cat": "plataformas",
+      "q": "Pra que serve o Bitrix24 no Fast Track?",
+      "variants": [
+        "bitrix24 pra que serve",
+        "o que é o bitrix"
+      ],
+      "a": "É o CRM que você usa no dia a dia do Fast Track: nele você cadastra e acompanha leads, roda a cadência de prospecção (ligação, WhatsApp, agendamento de R1/R2), e o seu card pessoal também acompanha sua etapa dentro do funil do programa. Se quiser saber sobre marcadores, como ligar por ele ou como importar a Lista 200, é só perguntar aqui mesmo.",
+      "links": [],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "pra-que-serve-hubsmart",
+      "cat": "plataformas",
+      "q": "Pra que serve o Hub Smart no Fast Track?",
+      "variants": [
+        "hub smart pra que serve",
+        "o que é o hub smart"
+      ],
+      "a": "Esse conteúdo ainda não foi documentado nesta versão da apostila — pergunte ao seu capitão por enquanto. (Nota interna: pendente o Pedro confirmar o escopo exato do Hub Smart pra essa resposta ser completada.)",
+      "links": [],
+      "draft": true,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "buttons": [],
+      "options": []
+    },
+    {
+      "id": "nao-compartilhar-dados-sensiveis",
+      "cat": "contato",
+      "q": "Posso mandar minha senha, CPF ou dados bancários aqui?",
+      "variants": [
+        "posso enviar dados sensíveis",
+        "posso mandar minha senha aqui",
+        "dados bancários no chat",
+        "cartão de crédito aqui",
+        "posso colocar meu cpf aqui"
+      ],
+      "a": "Não! Esse chat não deve receber (nem pedir) senha, CPF, número de cartão, dados bancários ou qualquer informação sensível — mesmo sendo só local no seu navegador, esse não é o canal certo pra isso.\n\nSe você precisa resolver algo que envolve esse tipo de dado, fala direto com a Íris ou com o seu capitão, pelos canais oficiais deles:",
+      "links": [],
+      "buttons": [
+        {
+          "label": "💬 Íris — Suporte geral InvestSmart",
+          "url": "https://wa.me/5521972646115"
+        }
+      ],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "options": []
+    },
+    {
+      "id": "duvida-fora-escopo-rh-comissao",
+      "cat": "contato",
+      "q": "Tenho uma dúvida sobre comissão, pagamento ou RH",
+      "variants": [
+        "dúvida de comissão",
+        "pagamento",
+        "questão de rh",
+        "problema com holerite",
+        "dúvida de salário"
+      ],
+      "a": "Essa aqui foge um pouco do que eu cubro — dúvidas sobre comissão, pagamento ou RH são melhor resolvidas direto com a Íris, o suporte geral da InvestSmart. Toque no botão abaixo pra chamar ela:",
+      "links": [],
+      "buttons": [
+        {
+          "label": "💬 Íris — Suporte geral InvestSmart",
+          "url": "https://wa.me/5521972646115"
+        }
+      ],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "options": []
+    },
+    {
+      "id": "duvida-cliente-diagnostico",
+      "cat": "contato",
+      "q": "Tenho uma dúvida sobre como resolver um problema com um cliente ou um diagnóstico exclusivo",
+      "variants": [
+        "problema com cliente",
+        "diagnóstico do cliente",
+        "cliente reclamando",
+        "dúvida técnica com cliente"
+      ],
+      "a": "Pra dúvidas assim — resolver um problema específico com um cliente ou um diagnóstico exclusivo — o ideal é falar direto com o seu capitão, que conhece o contexto e pode te orientar melhor. Toque no botão do seu capitão:",
+      "links": [],
+      "buttons": [
+        {
+          "label": "💬 Yuri de Carvalho — Turma 38",
+          "url": "https://wa.me/5521980963410"
+        },
+        {
+          "label": "💬 Rafael Bertelli — Turma 38",
+          "url": "https://wa.me/553584016188"
+        },
+        {
+          "label": "💬 Pollyanna Antunes — Turma 38",
+          "url": "https://wa.me/558488422910"
+        },
+        {
+          "label": "💬 Hudson Machado — Turma 39",
+          "url": "https://wa.me/5511971170142"
+        },
+        {
+          "label": "💬 Mariana Maia — Turma 40",
+          "url": "https://wa.me/5521995419132"
+        },
+        {
+          "label": "💬 Eros Fonseca — Turma 40",
+          "url": "https://wa.me/558699501096"
+        },
+        {
+          "label": "💬 Julia Siqueira",
+          "url": "https://wa.me/5521970345408"
+        },
+        {
+          "label": "💬 Ravel Brito",
+          "url": "https://wa.me/5512996689043"
+        }
+      ],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "options": []
+    },
+    {
+      "id": "duvida-nao-listada",
+      "cat": "contato",
+      "q": "Minha dúvida não está aqui, o que eu faço?",
+      "variants": [
+        "não achei minha resposta",
+        "preciso falar com alguém",
+        "quero ajuda humana"
+      ],
+      "a": "Fala direto com o capitão responsável pela sua turma, ou com a Íris se for algo mais geral — essa apostila cobre só as dúvidas operacionais mais comuns, e vai crescendo com o tempo. Toque num botão abaixo, ou avise sobre a pergunta que faltou, assim ela pode entrar numa próxima atualização.",
+      "links": [],
+      "buttons": [
+        {
+          "label": "💬 Íris — Suporte geral InvestSmart",
+          "url": "https://wa.me/5521972646115"
+        },
+        {
+          "label": "💬 Yuri de Carvalho — Turma 38",
+          "url": "https://wa.me/5521980963410"
+        },
+        {
+          "label": "💬 Rafael Bertelli — Turma 38",
+          "url": "https://wa.me/553584016188"
+        },
+        {
+          "label": "💬 Pollyanna Antunes — Turma 38",
+          "url": "https://wa.me/558488422910"
+        },
+        {
+          "label": "💬 Hudson Machado — Turma 39",
+          "url": "https://wa.me/5511971170142"
+        },
+        {
+          "label": "💬 Mariana Maia — Turma 40",
+          "url": "https://wa.me/5521995419132"
+        },
+        {
+          "label": "💬 Eros Fonseca — Turma 40",
+          "url": "https://wa.me/558699501096"
+        },
+        {
+          "label": "💬 Julia Siqueira",
+          "url": "https://wa.me/5521970345408"
+        },
+        {
+          "label": "💬 Ravel Brito",
+          "url": "https://wa.me/5512996689043"
+        }
+      ],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "options": []
+    },
+    {
+      "id": "quem-sao-capitaes",
+      "cat": "contato",
+      "q": "Quem são os capitães do Fast Track hoje?",
+      "variants": [
+        "lista de capitães",
+        "quem é meu capitão"
+      ],
+      "a": "Capitães ativos (atualizado em 21/09/2026 — confirme com a coordenação se já mudou): Turma 38 — Yuri, Rafael e Pollyanna; Turma 39 — Hudson; Turma 40 — Mariana e Eros; Julia e Ravel também estão ativos. Toque no botão pra chamar direto no WhatsApp:",
+      "links": [],
+      "buttons": [
+        {
+          "label": "💬 Yuri de Carvalho — Turma 38",
+          "url": "https://wa.me/5521980963410"
+        },
+        {
+          "label": "💬 Rafael Bertelli — Turma 38",
+          "url": "https://wa.me/553584016188"
+        },
+        {
+          "label": "💬 Pollyanna Antunes — Turma 38",
+          "url": "https://wa.me/558488422910"
+        },
+        {
+          "label": "💬 Hudson Machado — Turma 39",
+          "url": "https://wa.me/5511971170142"
+        },
+        {
+          "label": "💬 Mariana Maia — Turma 40",
+          "url": "https://wa.me/5521995419132"
+        },
+        {
+          "label": "💬 Eros Fonseca — Turma 40",
+          "url": "https://wa.me/558699501096"
+        },
+        {
+          "label": "💬 Julia Siqueira",
+          "url": "https://wa.me/5521970345408"
+        },
+        {
+          "label": "💬 Ravel Brito",
+          "url": "https://wa.me/5512996689043"
+        }
+      ],
+      "draft": false,
+      "needsTurma": false,
+      "turmaPrompt": "",
+      "turmaAnswerPrefix": "",
+      "turmaLinks": {},
+      "turmaUnavailable": {},
+      "turmaFollowUp": "",
+      "options": []
+    }
+  ],
+  "irisButton": {
+    "label": "💬 Íris — Suporte geral InvestSmart",
+    "url": "https://wa.me/5521972646115"
+  },
+  "captainButtons": [
+    {
+      "label": "💬 Yuri de Carvalho — Turma 38",
+      "url": "https://wa.me/5521980963410"
+    },
+    {
+      "label": "💬 Rafael Bertelli — Turma 38",
+      "url": "https://wa.me/553584016188"
+    },
+    {
+      "label": "💬 Pollyanna Antunes — Turma 38",
+      "url": "https://wa.me/558488422910"
+    },
+    {
+      "label": "💬 Hudson Machado — Turma 39",
+      "url": "https://wa.me/5511971170142"
+    },
+    {
+      "label": "💬 Mariana Maia — Turma 40",
+      "url": "https://wa.me/5521995419132"
+    },
+    {
+      "label": "💬 Eros Fonseca — Turma 40",
+      "url": "https://wa.me/558699501096"
+    },
+    {
+      "label": "💬 Julia Siqueira",
+      "url": "https://wa.me/5521970345408"
+    },
+    {
+      "label": "💬 Ravel Brito",
+      "url": "https://wa.me/5512996689043"
+    }
+  ]
+};
+
+(function(){
+  // ---- Mobile sidebar toggle ----
+  var navToggle = document.getElementById('navToggle');
+  var sidebar = document.getElementById('sidebar');
+  navToggle.addEventListener('click', function(){
+    var open = sidebar.classList.toggle('open');
+    navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  // ---- Build sidebar (accordion by category) ----
+  var catListEl = document.getElementById('catList');
+  var faqById = {};
+  FAQ_DATA.faqs.forEach(function(f){ faqById[f.id] = f; });
+  var IRIS_BUTTON = FAQ_DATA.irisButton;
+  var CAPTAIN_BUTTONS = FAQ_DATA.captainButtons || [];
+
+  FAQ_DATA.categories.forEach(function(cat, idx){
+    var block = document.createElement('div');
+    block.className = 'cat-block' + (idx === 0 ? ' open' : '');
+    var head = document.createElement('button');
+    head.className = 'cat-head';
+    head.type = 'button';
+    head.innerHTML = '<span>' + cat.label + '</span><span class="chev">&#9656;</span>';
+    head.addEventListener('click', function(){ block.classList.toggle('open'); });
+    var list = document.createElement('ul');
+    list.className = 'cat-questions';
+    FAQ_DATA.faqs.filter(function(f){ return f.cat === cat.id; }).forEach(function(f){
+      var li = document.createElement('li');
+      var btn = document.createElement('button');
+      btn.textContent = f.q;
+      if(f.draft) btn.className = 'draft';
+      btn.addEventListener('click', function(){
+        askQuestion(f.q, f.id);
+        if(window.matchMedia('(max-width:860px)').matches){
+          sidebar.classList.remove('open');
+          navToggle.setAttribute('aria-expanded','false');
+        }
+      });
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+    block.appendChild(head);
+    block.appendChild(list);
+    catListEl.appendChild(block);
+  });
+
+  // ---- Fuzzy search ----
+  var searchList = FAQ_DATA.faqs.map(function(f){
+    return { id: f.id, q: f.q, variants: f.variants || [], cat: f.cat };
+  });
+  var fuse = null;
+  try{
+    fuse = new Fuse(searchList, {
+      keys: [
+        { name: 'q', weight: 0.5 },
+        { name: 'variants', weight: 0.5 }
+      ],
+      threshold: 0.42,
+      ignoreLocation: true,
+      minMatchCharLength: 3,
+    });
+  }catch(e){ fuse = null; }
+
+  // ---- Chat rendering ----
+  var chatScroll = document.getElementById('chatScroll');
+  var chipsRow = document.getElementById('chipsRow');
+
+  function scrollToBottom(){
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+  }
+
+  function escapeHtml(s){
+    var div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+  }
+  function linkify(text){
+    var escaped = escapeHtml(text);
+    return escaped.replace(/(https?:\/\/[^\s]+)/g, function(url){
+      return '<a href="' + url + '" target="_blank" rel="noopener">' + url + '</a>';
+    });
+  }
+
+  function addUserMessage(text){
+    var msg = document.createElement('div');
+    msg.className = 'msg user';
+    msg.innerHTML = '<div class="avatar">Você</div><div class="bubble"></div>';
+    msg.querySelector('.bubble').textContent = text;
+    chatScroll.appendChild(msg);
+    scrollToBottom();
+  }
+
+  function addBotAnswer(faq){
+    var msg = document.createElement('div');
+    msg.className = 'msg bot';
+    var avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = 'FT';
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = linkify(faq.a);
+    if(faq.draft){
+      var tag = document.createElement('div');
+      tag.className = 'draft-tag';
+      tag.textContent = 'Resposta em validação';
+      bubble.appendChild(tag);
+    }
+    if(faq.links && faq.links.length){
+      var rel = document.createElement('div');
+      rel.className = 'related-label';
+      rel.textContent = 'Material relacionado: ' + faq.links.join(' · ');
+      bubble.appendChild(rel);
+    }
+    if(faq.buttons && faq.buttons.length){
+      var waBox = document.createElement('div');
+      waBox.className = 'wa-buttons';
+      faq.buttons.forEach(function(btn){
+        var a = document.createElement('a');
+        a.className = 'wa-btn';
+        a.href = btn.url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = btn.label;
+        waBox.appendChild(a);
+      });
+      bubble.appendChild(waBox);
+    }
+    if(faq.options && faq.options.length){
+      var optBox = document.createElement('div');
+      optBox.className = 'option-buttons';
+      faq.options.forEach(function(opt){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'option-btn';
+        b.textContent = opt.label;
+        b.addEventListener('click', function(){ selectFaqOption(opt); });
+        optBox.appendChild(b);
+      });
+      bubble.appendChild(optBox);
+    }
+    msg.appendChild(avatar);
+    msg.appendChild(bubble);
+    chatScroll.appendChild(msg);
+    scrollToBottom();
+  }
+
+  // ---- Resposta com opções (ex.: "meus números não batem no KPI") ----
+  // Em vez de jogar todos os casos numa resposta só, a pergunta mostra uma
+  // introdução + botões; ao clicar, mostra só a resposta daquele caso.
+  function selectFaqOption(opt){
+    addUserMessage(opt.label);
+    setTimeout(function(){
+      addBotAnswer({
+        a: opt.a,
+        links: opt.links || [],
+        buttons: opt.buttons || [],
+        options: [],
+        draft: false,
+      });
+    }, 220);
+  }
+
+  function addBotText(text){
+    var msg = document.createElement('div');
+    msg.className = 'msg bot';
+    msg.innerHTML = '<div class="avatar">FT</div><div class="bubble"></div>';
+    msg.querySelector('.bubble').innerHTML = linkify(text);
+    chatScroll.appendChild(msg);
+    scrollToBottom();
+  }
+
+  // ---- Turma-dependent answers (ex.: Entrega de Tarefas, FP Client) ----
+  var pendingTurmaFor = null; // id do FAQ aguardando a turma
+  var TURMA_WORDS = { 'trinta e sete':'37', 'trinta e oito':'38', 'trinta e nove':'39', 'quarenta':'40' };
+
+  function extractTurma(text){
+    var t = text.toLowerCase();
+    for(var word in TURMA_WORDS){
+      if(t.indexOf(word) !== -1) return TURMA_WORDS[word];
+    }
+    var m = t.match(/\b(37|38|39|40)\b/);
+    return m ? m[1] : null;
+  }
+
+  function resolveTurmaAnswer(faq, turma){
+    var link = faq.turmaLinks && faq.turmaLinks[turma];
+    if(link){
+      addBotText((faq.turmaAnswerPrefix || 'Segue o link:') + ' ' + link +
+        (faq.turmaFollowUp ? '\n\n' + faq.turmaFollowUp : ''));
+      return;
+    }
+    var note = faq.turmaUnavailable && faq.turmaUnavailable[turma];
+    if(note){
+      addBotText(note);
+      return;
+    }
+    addBotText('Hmm, não tenho o link dessa turma (' + turma + ') cadastrado ainda — fala com o capitão da sua turma que ele te ajuda.');
+  }
+
+  function addBotFallback(suggestions){
+    var msg = document.createElement('div');
+    msg.className = 'msg bot';
+    var avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = 'FT';
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.appendChild(document.createTextNode(
+      'Ainda não encontrei uma resposta certeira pra essa pergunta, desculpa! ' +
+      (suggestions.length ? 'Talvez uma dessas ajude:' : 'Mas você pode falar direto com a Íris ou com o capitão da sua turma:')
+    ));
+    if(suggestions.length){
+      var box = document.createElement('div');
+      box.className = 'suggestions';
+      suggestions.forEach(function(f){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = f.q;
+        b.addEventListener('click', function(){ askQuestion(f.q, f.id); });
+        box.appendChild(b);
+      });
+      bubble.appendChild(box);
+      var relLabel = document.createElement('div');
+      relLabel.className = 'related-label';
+      relLabel.textContent = 'Ou fale direto com alguém:';
+      bubble.appendChild(relLabel);
+    }
+    var waBox = document.createElement('div');
+    waBox.className = 'wa-buttons';
+    var contacts = (IRIS_BUTTON ? [IRIS_BUTTON] : []).concat(CAPTAIN_BUTTONS);
+    contacts.forEach(function(btn){
+      var a = document.createElement('a');
+      a.className = 'wa-btn';
+      a.href = btn.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = btn.label;
+      waBox.appendChild(a);
+    });
+    bubble.appendChild(waBox);
+    msg.appendChild(avatar);
+    msg.appendChild(bubble);
+    chatScroll.appendChild(msg);
+    scrollToBottom();
+  }
+
+  // ---- Repúdio explícito a dados sensíveis ----
+  // Checagem simples client-side (heurística, não é um filtro perfeito):
+  // se o texto digitado parecer ter CPF, número de cartão, CVV ou uma
+  // senha/dado bancário explícito, o bot recusa processar e direciona pra
+  // Íris em vez de tentar casar com alguma pergunta do FAQ.
+  var SENSITIVE_PATTERNS = [
+    /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/,      // CPF (com ou sem pontuação)
+    /\b(?:\d[ .-]?){13,19}\b/,                // possível número de cartão
+    /\bcvv\b/i,
+    /senha\s*[:=]/i,
+    /minha senha\s+(é|eh|:)/i,
+    /n[uú]mero do cart[aã]o/i,
+    /conta\s*corrente.{0,15}\d{4,}/i,
+  ];
+  function looksSensitive(text){
+    return SENSITIVE_PATTERNS.some(function(re){ return re.test(text); });
+  }
+
+  function askQuestion(text, knownId){
+    addUserMessage(text);
+
+    // Repúdio a dados sensíveis vem antes de qualquer outra lógica —
+    // inclusive interrompe um fluxo de "aguardando turma" em andamento.
+    if(!knownId && looksSensitive(text)){
+      pendingTurmaFor = null;
+      setTimeout(function(){
+        addBotAnswer({
+          a: 'Opa, não! Por segurança eu não processo isso — parece que sua mensagem tem um dado sensível (senha, CPF, cartão ou parecido). Apaga essa informação por aqui. Se precisar de ajuda com algo assim, fala direto com a Íris ou com o seu capitão, pelos canais oficiais:',
+          buttons: (IRIS_BUTTON ? [IRIS_BUTTON] : []),
+          links: [],
+          draft: false,
+        });
+      }, 220);
+      return;
+    }
+
+    // Se estávamos esperando a turma pra uma pergunta anterior (ex.: Entrega
+    // de Tarefas / FP Client), tenta resolver a turma primeiro.
+    if(pendingTurmaFor && !knownId){
+      var turma = extractTurma(text);
+      var faqPending = faqById[pendingTurmaFor];
+      if(turma){
+        pendingTurmaFor = null;
+        setTimeout(function(){ resolveTurmaAnswer(faqPending, turma); }, 220);
+        return;
+      } else {
+        setTimeout(function(){
+          addBotText('Desculpa, não entendi a turma 😅 Pode me dizer só o número (37, 38, 39 ou 40)?');
+        }, 220);
+        return;
+      }
+    }
+
+    var faq = knownId ? faqById[knownId] : null;
+    if(!faq && fuse){
+      var results = fuse.search(text);
+      if(results.length && results[0].score <= 0.45){
+        faq = faqById[results[0].item.id];
+      }
+    }
+    setTimeout(function(){
+      if(faq && faq.needsTurma){
+        pendingTurmaFor = faq.id;
+        addBotText(faq.turmaPrompt || 'Qual é a sua turma?');
+      } else if(faq){
+        addBotAnswer(faq);
+      } else {
+        var suggestions = [];
+        if(fuse){
+          var results = fuse.search(text);
+          suggestions = results.slice(0, 3).map(function(r){ return faqById[r.item.id]; });
+        }
+        if(!suggestions.length){
+          suggestions = FAQ_DATA.faqs.slice(0, 3);
+        }
+        addBotFallback(suggestions);
+      }
+    }, 220);
+  }
+
+  // ---- Quick-start chips ----
+  var startIds = ['form-entrega-tarefas', 'numeros-nao-batem-kpi', 'marcadores-bitrix', 'quem-sao-capitaes'];
+  startIds.forEach(function(id){
+    var f = faqById[id];
+    if(!f) return;
+    var chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.type = 'button';
+    chip.textContent = f.q;
+    chip.addEventListener('click', function(){ askQuestion(f.q, f.id); });
+    chipsRow.appendChild(chip);
+  });
+
+  // ---- Welcome message ----
+  (function(){
+    var msg = document.createElement('div');
+    msg.className = 'msg bot';
+    msg.innerHTML = '<div class="avatar">FT</div><div class="bubble"></div>';
+    msg.querySelector('.bubble').textContent =
+      'Oi, tudo bem? 😊 Eu ajudo com dúvidas operacionais do Fast Track — cronograma, ranking de KPI, presença, formulários e afins.\n\n' +
+      'Digite sua dúvida abaixo, ou escolha um tema na lista ao lado (ou aqui embaixo). E lembrando: nunca me manda senha, CPF, cartão ou qualquer dado sensível — pra isso, fala direto com a Íris ou seu capitão.';
+    chatScroll.appendChild(msg);
+  })();
+
+  // ---- Input handling ----
+  var chatInput = document.getElementById('chatInput');
+  var sendBtn = document.getElementById('sendBtn');
+  function submitInput(){
+    var text = chatInput.value.trim();
+    if(!text) return;
+    askQuestion(text, null);
+    chatInput.value = '';
+  }
+  sendBtn.addEventListener('click', submitInput);
+  chatInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ submitInput(); }
+  });
+
+  // ---- PWA: registra o service worker pra funcionar offline e ser
+  // instalável ("Adicionar à tela inicial"). Se service-worker.js não
+  // existir junto (ex.: abrindo o HTML direto, fora de um link https),
+  // isso falha silenciosamente e o resto continua funcionando normal.
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('service-worker.js').catch(function(){});
+    });
+  }
+})();
+</script>
+</body>
+</html>
