@@ -445,6 +445,7 @@ button{font-family:inherit;}
   gap:8px;
   padding:0 20px 16px;
 }
+.chip{scroll-snap-align:start;}
 .chip{
   background:var(--glass-bg);
   color:var(--accent-deep);
@@ -996,29 +997,67 @@ button{font-family:inherit;}
     height:calc(100vh - 96px);
     height:calc(100dvh - 96px);
   }
-  .chat-scroll{padding:14px;}
+  .chat-scroll{padding:14px;gap:12px;}
+  /* 29/09 (feedback do Pedro testando num Android real): a fileira de chips
+     rolava na horizontal sem nenhum indício visual de que dava pra arrastar
+     — o último chip ficava cortado bem na borda da tela, parecendo um erro
+     de layout em vez de "role pra ver mais". Três ajustes juntos: mais
+     respiro nas pontas, cada chip "encaixando" no lugar ao rolar (em vez de
+     parar no meio de um chip cortado) e um degradê nas bordas (só quando dá
+     pra rolar mais naquela direção, via classes que o JS liga/desliga)
+     avisando que o conteúdo continua. */
   .chips-row{
     flex-wrap:nowrap;
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
     scrollbar-width:none;
-    padding:0 14px 14px;
+    scroll-snap-type:x proximity;
+    padding:0 20px 14px;
   }
   .chips-row::-webkit-scrollbar{display:none;}
+  .chips-row.fade-right{-webkit-mask-image:linear-gradient(to right, #000 calc(100% - 44px), transparent);mask-image:linear-gradient(to right, #000 calc(100% - 44px), transparent);}
+  .chips-row.fade-left{-webkit-mask-image:linear-gradient(to left, #000 calc(100% - 44px), transparent);mask-image:linear-gradient(to left, #000 calc(100% - 44px), transparent);}
+  .chips-row.fade-left.fade-right{-webkit-mask-image:linear-gradient(to right, transparent, #000 44px, #000 calc(100% - 44px), transparent);mask-image:linear-gradient(to right, transparent, #000 44px, #000 calc(100% - 44px), transparent);}
   .msg{max-width:92%;}
+  .bubble{font-size:13px;line-height:1.48;padding:11px 14px;}
+  /* Cabeçalho do chat mais enxuto no celular: avatar/título menores e os
+     dois botões (Atendimento humano / Principais perguntas) lado a lado
+     numa linha só, em vez de cada um numa linha própria — o pedido do Pedro
+     foi "a parte do chat muito grande" no celular, e essas 2-3 linhas extra
+     de cabeçalho eram boa parte disso. */
+  .topbar{padding:12px 14px;padding-top:calc(12px + env(safe-area-inset-top,0px));gap:8px 10px;}
+  .bot-id-avatar{width:34px;height:34px;}
+  .bot-id-avatar img{width:19px;height:19px;}
+  .brand-title{font-size:15px;}
+  .brand-mark{font-size:9px;padding:1px 6px;}
+  .human-btn, .nav-toggle{font-size:11.5px;padding:7px 11px;gap:5px;}
+  .human-btn svg, .nav-toggle svg{width:13px;height:13px;}
+  /* Avisos de rodapé do chat (privacidade/escalonamento) precisam de espaço
+     à direita reservado pro botão de modo escuro (fixo, canto inferior
+     direito) não ficar em cima do texto — mesmo problema no rodapé da home,
+     ver .privacy-note mais abaixo. */
+  .escalation{padding:0 56px 14px 20px;}
   /* No celular a coluna de cada retângulo fica bem estreita (2 por linha) —
-     ícone e seta um pouco menores dão mais espaço pro nome, que ainda pode
-     quebrar no meio de uma palavra longa (ex.: "escalonamento"); é um
-     trade-off aceitável nesse espaço apertado. */
+     ícone menor dá mais espaço pro nome; a seta foi escondida (ela já existe
+     nos outros cards, dá pra entender que é clicável sem ela) porque era
+     exatamente o que faltava de espaço pra "escalonamento" não quebrar no
+     meio da palavra. */
   .home-cat-card.home-cat-card--rect{gap:7px;padding:10px;}
   .home-cat-card.home-cat-card--rect .home-cat-icon-wrap{width:24px;height:24px;}
   .home-cat-card.home-cat-card--rect .home-cat-icon-wrap svg{width:13px;height:13px;}
+  .home-cat-card.home-cat-card--rect .home-cat-arrow{display:none;}
   .home-title{font-size:18px;}
   .home-greeting-card{padding:16px 16px 14px;}
   /* Banners de tema ainda um pouco mais baixos no celular (2 por linha,
      onde a largura de cada card já é menor) — mesmo pedido de 24/09. */
   .home-cat-card{aspect-ratio:1.7 / 1;padding:9px;}
   .home-view{padding:14px;padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));}
+  /* Mesmo motivo do .escalation acima: o aviso de privacidade é o último
+     texto antes do botão de modo escuro, tanto na home quanto no rodapé do
+     chat. */
+  .privacy-note{padding:0 56px 0 14px;}
+  .theme-toggle{width:38px;height:38px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));}
+  .theme-toggle svg{width:16px;height:16px;}
 }
 /* Telas baixas (ex.: iPhone SE, ~667px de altura) — mesmo com o formato de
    banner e os espaçamentos já reduzidos acima, a home ainda passava um
@@ -2605,15 +2644,15 @@ const FAQ_DATA = {
   // cada card representa uma ação (abrir a sheet de um tema, ou ir direto
   // pra resposta de um subtema de Plataformas), nunca duas ao mesmo tempo.
   function buildHomeCard(iconSvg, label, image, onClick){
+    // 29/09: o Pedro pediu pra voltar os cards a serem só de cor (sem foto)
+    // — o parâmetro "image" continua chegando aqui (dado do FAQ_DATA não foi
+    // apagado, só parou de ser usado), então basta reativar o bloco abaixo
+    // se um dia quiser voltar a mostrar as fotos.
     var card = document.createElement('button');
     card.type = 'button';
     var variant = HOME_TILE_VARIANTS[tileIdx % HOME_TILE_VARIANTS.length];
     tileIdx++;
     card.className = 'home-cat-card ' + variant;
-    if(image){
-      card.classList.add('has-image');
-      card.style.setProperty('--cat-photo', 'url(' + image + ')');
-    }
     card.innerHTML =
       '<span class="home-cat-top"><span class="home-cat-icon-wrap">' + iconSvg + '</span>' +
       '<span class="home-cat-arrow" aria-hidden="true">' + ARROW_SVG + '</span></span>' +
@@ -3269,6 +3308,20 @@ const FAQ_DATA = {
     chip.addEventListener('click', function(){ askQuestion(f.q, f.id); });
     chipsRow.appendChild(chip);
   });
+  // 29/09: degradê nas pontas da fileira de chips (só existe fisicamente via
+  // scroll no celular — ver @media max-width:860px) avisando que dá pra
+  // rolar pros dois lados, ligado/desligado conforme a posição do scroll,
+  // igual ao padrão já usado nas setas dos carrosséis da home.
+  (function(){
+    function updateChipsFade(){
+      var maxScroll = chipsRow.scrollWidth - chipsRow.clientWidth;
+      chipsRow.classList.toggle('fade-left', chipsRow.scrollLeft > 4);
+      chipsRow.classList.toggle('fade-right', chipsRow.scrollLeft < maxScroll - 4);
+    }
+    chipsRow.addEventListener('scroll', updateChipsFade);
+    window.addEventListener('resize', updateChipsFade);
+    updateChipsFade();
+  })();
 
   // ---- Welcome message ----
   (function(){
