@@ -1096,14 +1096,17 @@ button{font-family:inherit;}
    tela só (limitado também pela altura). Cores fixas do Figma — a home
    não muda com o modo escuro; o botão de tema só aparece no chat. */
 .fx-home{
+  /* Valor inicial; o script (fxFitHome) recalcula --u e --fx-vh com a
+     medida real da tela visível do celular, que nem sempre bate com 100dvh
+     (01/10: em alguns Androids a home ficava cortada embaixo). */
   --u:calc(min(100vw, 460px, 100dvh * 0.48) / 323);
   --fx-lilac:#E9DEFF;
   --fx-purple:#9966FF;
   --fx-badge:#E3DFEA;
   --fx-green:#22C55E;
   position:relative;
-  min-height:100vh;
-  min-height:100dvh;
+  height:var(--fx-vh, 100vh);
+  width:100%;
   display:flex;
   justify-content:center;
   background:#FFFFFF;
@@ -1129,6 +1132,13 @@ body.on-home .theme-toggle{display:none;}
   background:var(--fx-lilac);
   border-radius:0 0 calc(37 * var(--u)) calc(37 * var(--u));
 }
+/* No celular, o bloco lilás do topo vai de ponta a ponta da tela (sem
+   faixa branca dos lados quando a home é limitada pela altura). */
+@media (max-width:519px){
+  .fx-panel{left:calc((323 * var(--u) - 100vw) / 2);width:100vw;}
+}
+html:has(body.on-home){overflow:hidden;}
+body.on-home{overflow:hidden;overscroll-behavior:none;}
 /* Na tela larga, a home vira um "celular" centralizado */
 @media (min-width:520px){
   .fx-home{align-items:center;background:#F4F1FA;}
@@ -1279,7 +1289,9 @@ body.on-home .theme-toggle{display:none;}
   color:#000;
 }
 /* ---------- Tela Info: home desfocada por trás + cartão no topo ---------- */
-.fx-home.is-info .fx-stage{filter:blur(calc(3.5 * var(--u)));}
+/* 01/10: o desfoque agora é do próprio fundo da camada (backdrop-filter),
+   e não um filter na home — o filter "encolhia" as bordas da tela,
+   criando uma margem clara em volta. */
 .fx-info{
   position:fixed;
   inset:0;
@@ -1287,22 +1299,29 @@ body.on-home .theme-toggle{display:none;}
   display:flex;
   justify-content:center;
   background:rgba(69,69,69,0.09);
+  -webkit-backdrop-filter:blur(calc(3.5 * var(--u)));
+          backdrop-filter:blur(calc(3.5 * var(--u)));
   animation:fxFade .2s var(--ease);
 }
 .fx-info[hidden]{display:none;}
 .fx-info-scrim{position:absolute;inset:0;}
+/* O cartão ocupa a largura toda da tela (nunca mais largo que ela — antes
+   tinha 2px a mais e a página "escorregava" pro lado depois de fechar);
+   o conteúdo fica numa caixa central com as medidas do Figma. */
 .fx-info-card{
   position:relative;
-  width:calc(325 * var(--u));
+  width:100%;
   height:calc(194 * var(--u));
   background:#FFFFFF;
   border-radius:0 0 calc(38 * var(--u)) calc(38 * var(--u));
   box-shadow:0 4px 4px rgba(0,0,0,0.06);
   animation:fxDrop .28s var(--ease);
 }
+.fx-info-inner{position:relative;width:calc(323 * var(--u));height:100%;margin:0 auto;}
 @media (min-width:520px){
   .fx-info{align-items:center;}
   .fx-info-card{
+    width:calc(323 * var(--u));
     border-radius:calc(38 * var(--u));
     /* alinha o cartão com o topo do "celular" centralizado */
     align-self:center;
@@ -1479,7 +1498,7 @@ body.on-home .theme-toggle{display:none;}
 .cx-hero-title{
   margin:0 0 14px;
   font-family:"Barlow",system-ui,sans-serif;
-  font-size:38px;
+  font-size:32px;
   font-weight:500;
   line-height:1.08;
   letter-spacing:-0.02em;
@@ -1487,7 +1506,7 @@ body.on-home .theme-toggle{display:none;}
 }
 .cx-hero-text{
   margin:0 0 10px;
-  font-size:15px;
+  font-size:14px;
   line-height:1.55;
   color:var(--cx-soft);
 }
@@ -1565,20 +1584,26 @@ body.on-home .theme-toggle{display:none;}
 }
 .chat-view .send-btn svg{width:18px;height:18px;}
 @media (max-width:640px){
-  .cx-topbar{padding:14px 14px 6px;padding-top:calc(14px + env(safe-area-inset-top,0px));gap:8px;}
+  .cx-topbar{padding:14px 22px 6px;padding-top:calc(14px + env(safe-area-inset-top,0px));gap:8px;}
   .cx-top-left{gap:10px;}
   .cx-brand-title{font-size:16px;}
   .cx-brand-sub{font-size:11px;}
   /* No celular as ações viram só ícone (círculos), como na referência */
   .cx-action{width:42px;padding:0;justify-content:center;}
   .cx-action-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
-  .chat-view .chat-scroll{padding:12px 16px 12px;}
-  .cx-hero{padding:18px 2px 12px;}
-  .cx-hero-title{font-size:32px;}
-  .cx-hero-text{font-size:14px;}
-  .chat-view .chips-row{padding:4px 16px 12px;}
-  .chat-view .chip{width:150px;min-height:116px;}
-  .chat-view .chat-input-row{padding:2px 16px 14px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));}
+  .chat-view .chat-scroll{padding:10px 24px 12px;}
+  .cx-hero{padding:14px 0 8px;}
+  .cx-hero-title{font-size:25px;margin-bottom:10px;}
+  .cx-hero-text{font-size:13px;line-height:1.5;margin-bottom:8px;}
+  .chat-view .chips-row{padding:4px 24px 10px;scroll-padding-inline:24px;gap:10px;}
+  .chat-view .chip{width:136px;min-height:100px;padding:12px;gap:10px;border-radius:18px;font-size:12px;}
+  .cx-chip-icon{width:30px;height:30px;}
+  .cx-chip-icon .cat-icon{width:14px;height:14px;}
+  .chat-view .input-pill{min-height:52px;padding:5px 5px 5px 18px;}
+  .chat-view .chat-input{font-size:14px;}
+  .chat-view .send-btn{width:42px;height:42px;}
+  .chat-view .msg .bubble{font-size:13px;}
+  .chat-view .chat-input-row{padding:2px 24px 14px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));}
 }
 @media (max-width:360px){
   .cx-round,.cx-action{width:38px;height:38px;}
@@ -1613,14 +1638,14 @@ body.on-home .theme-toggle{display:none;}
 
   <div class="fx-info" id="fxInfo" role="dialog" aria-modal="true" aria-labelledby="fxInfoText" hidden>
     <div class="fx-info-scrim" id="fxInfoScrim"></div>
-    <div class="fx-info-card">
+    <div class="fx-info-card"><div class="fx-info-inner">
       <button type="button" class="fx-icon-btn fx-info-close" id="fxInfoClose" aria-label="Fechar e voltar pra tela inicial">
         <span class="fx-mask" style="--icon:url('data:image/png;base64,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')"></span>
       </button>
       <p class="fx-info-sub">Dúvidas operacionais do programa — não substitui o capitão</p>
       <p class="fx-info-text" id="fxInfoText">Este assistente está em constante atualização. Pra sugestões de melhoria, fale com seu capitão — e pra avaliar o Tira-Dúvidas, use o link abaixo.</p>
       <a class="fx-btn fx-rate-btn" id="feedbackLink" href="https://forms.cloud.microsoft/r/N1eDW7sA1r" target="_blank" rel="noopener">Avaliar o Tira-Dúvidas</a>
-    </div>
+    </div></div>
   </div>
 
   <!-- Carrosséis da home antiga: continuam sendo montados pelo script (é
@@ -3327,14 +3352,16 @@ const FAQ_DATA = {
       if(target){
         setTimeout(function(){ target.scrollIntoView({behavior:'smooth', block:'start'}); }, 60);
       }
-    } else {
-      setTimeout(function(){ chatInput && chatInput.focus(); }, 60);
     }
+    // 01/10: o campo de digitação não recebe mais foco sozinho ao abrir o
+    // chat (no celular isso abria o teclado na hora) — o teclado só aparece
+    // quando a pessoa toca na barra de digitação.
   }
   function goHome(){
     chatView.style.display = 'none';
     homeView.style.display = '';
     document.body.classList.add('on-home');
+    fxFitHome();
     closeCategorySheet();
   }
   homeCta.addEventListener('click', function(){ enterChat(null); });
@@ -3349,6 +3376,23 @@ const FAQ_DATA = {
   var fxInfoScrim = document.getElementById('fxInfoScrim');
   var fxStage = document.getElementById('fxStage');
   var fxThemesBtn = document.getElementById('fxThemesBtn');
+
+  // Encaixa a home numa tela só, com a medida real da área visível do
+  // aparelho (visualViewport), sem precisar rolar. --u = 1px do Figma.
+  function fxFitHome(){
+    if(homeView.style.display === 'none') return;
+    var vv = window.visualViewport;
+    var w = document.documentElement.clientWidth || window.innerWidth;
+    var h = (vv && vv.height) || window.innerHeight;
+    var u = Math.min(w, 460, h * 323 / 673) / 323;
+    homeView.style.setProperty('--u', u.toFixed(4) + 'px');
+    homeView.style.setProperty('--fx-vh', Math.round(h) + 'px');
+    if(window.scrollX || window.scrollY) window.scrollTo(0, 0);
+  }
+  fxFitHome();
+  window.addEventListener('resize', fxFitHome);
+  window.addEventListener('orientationchange', function(){ setTimeout(fxFitHome, 150); });
+  if(window.visualViewport) window.visualViewport.addEventListener('resize', fxFitHome);
   function openInfo(){
     fxInfoEl.hidden = false;
     homeView.classList.add('is-info');
