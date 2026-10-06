@@ -1962,7 +1962,7 @@ const FAQ_DATA = {
         "formulário avaliação líder",
         "avaliar meu capitão"
       ],
-      "a": "Claro! Aqui está: https://forms.cloud.microsoft/r/XmWL99E0PC\n\nEsse link vale pras Turmas 37, 38 e 40. A Turma 39 (Reconvocados) não tem esse formulário nesse ciclo.",
+      "a": "Claro! Aqui está: https://forms.cloud.microsoft/r/XmWL99E0PC\n\nEsse link vale pras Turmas 37, 38 e 40. A Turma 39 (Reconvocados) não tem esse formulário nesse ciclo.\n\n⚠️ Atenção: hoje só as turmas 40, 41 e Cluster A/Pro estão ativas.",
       "links": [],
       "draft": false,
       "needsTurma": false,
@@ -1984,14 +1984,15 @@ const FAQ_DATA = {
         "entregáveis formulário",
         "form de entregáveis"
       ],
-      "a": "Claro, qual é a sua turma?",
+      "a": "Claro, qual é a sua turma?\n\n⚠️ Atenção: hoje só as turmas 40, 41 e Cluster A/Pro estão ativas.",
       "links": [],
       "needsTurma": true,
-      "turmaPrompt": "Claro, qual é a sua turma?",
+      "turmaPrompt": "Claro, qual é a sua turma?\n\n⚠️ Atenção: hoje só as turmas 40, 41 e Cluster A/Pro estão ativas.",
       "turmaAnswerPrefix": "Segue o link do formulário de entregáveis da sua turma:",
       "turmaLinks": {
         "38": "https://forms.cloud.microsoft/r/RqfHzQECNx",
-        "40": "https://forms.cloud.microsoft/r/8YHYz2miha"
+        "40": "https://forms.cloud.microsoft/r/8YHYz2miha",
+        "41": "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=IYnNlFyPYkiDqK6qsGxAgvg1iEqxE2NJse2BoIGId5tUMFlNN0xEQkgzTUZFVlJDTVZHTVJDRlA5Wi4u"
       },
       "turmaUnavailable": {
         "39": "A Turma 39 (Reconvocados) não tem um formulário próprio de Entrega de Tarefas nesse ciclo — se você precisa entregar algo, confirme com seu capitão.",
@@ -2013,16 +2014,17 @@ const FAQ_DATA = {
         "formulário de entrega do fp client",
         "entrega do fp client"
       ],
-      "a": "Claro, qual é a sua turma?",
+      "a": "Claro, qual é a sua turma?\n\n⚠️ Atenção: hoje só as turmas 40, 41 e Cluster A/Pro estão ativas.",
       "links": [],
       "needsTurma": true,
-      "turmaPrompt": "Claro, qual é a sua turma?",
+      "turmaPrompt": "Claro, qual é a sua turma?\n\n⚠️ Atenção: hoje só as turmas 40, 41 e Cluster A/Pro estão ativas.",
       "turmaAnswerPrefix": "Segue o link do formulário de entrega do FP Client preenchido da sua turma — é ele que conta pra contabilização do seu KPI:",
       "turmaLinks": {
         "37": "https://forms.cloud.microsoft/r/yvvWHP8kdf",
         "38": "https://forms.cloud.microsoft/r/k5sLAnnwvC",
         "39": "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=IYnNlFyPYkiDqK6qsGxAgvg1iEqxE2NJse2BoIGId5tUM0JCNjRFUTdRTzdWMDI0QlZRTzJHVVc1NS4u",
-        "40": "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=IYnNlFyPYkiDqK6qsGxAgvg1iEqxE2NJse2BoIGId5tURUJQOTRCV1VCTFNVME00TDhKU1ZaOTNTQS4u"
+        "40": "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=IYnNlFyPYkiDqK6qsGxAgvg1iEqxE2NJse2BoIGId5tURUJQOTRCV1VCTFNVME00TDhKU1ZaOTNTQS4u",
+        "41": "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=IYnNlFyPYkiDqK6qsGxAgvg1iEqxE2NJse2BoIGId5tUQktWMFY0Vk05Nko3MDdLVFlYMDRWRFdPNy4u"
       },
       "turmaUnavailable": {},
       "turmaFollowUp": "Caso tenha dúvida sobre como preencher corretamente ou como sua resposta é validada, é só perguntar.",
@@ -3672,27 +3674,36 @@ const FAQ_DATA = {
   // ---- Turma-dependent answers (ex.: Entrega de Tarefas, FP Client) ----
   var pendingTurmaFor = null; // id do FAQ aguardando a turma
   var failedAttempts = 0; // tentativas seguidas sem resposta boa — na 2ª, transfere automaticamente
-  var TURMA_WORDS = { 'trinta e sete':'37', 'trinta e oito':'38', 'trinta e nove':'39', 'quarenta':'40' };
+  var TURMA_WORDS = { 'trinta e sete':'37', 'trinta e oito':'38', 'trinta e nove':'39', 'quarenta e um':'41', 'quarenta':'40' };
+  var TURMA_ALERT = '⚠️ Atenção: hoje só as turmas 40, 41 e Cluster A/Pro estão ativas.';
+  var TURMAS_ATIVAS = { '40':1, '41':1, 'cluster':1 };
 
   function extractTurma(text){
     var t = text.toLowerCase();
     for(var word in TURMA_WORDS){
       if(t.indexOf(word) !== -1) return TURMA_WORDS[word];
     }
-    var m = t.match(/\b(37|38|39|40)\b/);
-    return m ? m[1] : null;
+    var m = t.match(/\b(37|38|39|40|41)\b/);
+    if(m) return m[1];
+    if(/cluster|\bpro\b/.test(t)) return 'cluster';
+    return null;
   }
 
   function resolveTurmaAnswer(faq, turma){
+    var alertTxt = TURMAS_ATIVAS[turma] ? '' : '\n\n' + TURMA_ALERT;
     var link = faq.turmaLinks && faq.turmaLinks[turma];
     if(link){
       addBotText((faq.turmaAnswerPrefix || 'Segue o link:') + ' ' + link +
-        (faq.turmaFollowUp ? '\n\n' + faq.turmaFollowUp : ''));
+        (faq.turmaFollowUp ? '\n\n' + faq.turmaFollowUp : '') + alertTxt);
       return;
     }
     var note = faq.turmaUnavailable && faq.turmaUnavailable[turma];
     if(note){
-      addBotText(note);
+      addBotText(note + alertTxt);
+      return;
+    }
+    if(turma === 'cluster'){
+      addBotText('Pra Cluster A/Pro eu ainda não tenho um link próprio cadastrado aqui — fala com o seu capitão que ele te passa o formulário certo.');
       return;
     }
     addBotText('Hmm, não tenho o link dessa turma (' + turma + ') cadastrado ainda — fala com o capitão da sua turma que ele te ajuda.');
@@ -3923,7 +3934,7 @@ const FAQ_DATA = {
         return;
       } else {
         setTimeout(function(){
-          addBotText('Desculpa, não entendi a turma 😅 Pode me dizer só o número (37, 38, 39 ou 40)?');
+          addBotText('Desculpa, não entendi a turma 😅 Pode me dizer só o número da turma (ou se é Cluster A/Pro)?\n\n⚠️ Atenção: hoje só as turmas 40, 41 e Cluster A/Pro estão ativas.');
         }, BOT_DELAY);
         return;
       }
