@@ -4,10 +4,11 @@
      assessor vê a lista de capitães e os links mais recentes sempre que tiver
      internet.
    - Demais arquivos do app (ícones, manifest): cache com atualização em segundo plano.
-   - A busca (Fuse.js) está embutida no index.html, sem dependência externa.
+   - A busca (Fuse.js), as fontes (Barlow e Inter) e as imagens estão embutidas no
+     index.html — um único arquivo em cache já deixa o app todo funcionando offline.
    Ao publicar, troque o VERSION: o app avisa quem estiver com ele aberto e os
    caches de versões anteriores são apagados. */
-const VERSION = '2026-10-14.1';
+const VERSION = '2026-10-14.2';
 const CACHE_PREFIX = 'tira-duvidas-ft-';
 const CACHE_NAME = CACHE_PREFIX + VERSION;
 const APP_SHELL = [
@@ -16,6 +17,8 @@ const APP_SHELL = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './icon-maskable-192.png',
+  './icon-maskable-512.png',
   './apple-touch-icon.png',
 ];
 const NETWORK_TIMEOUT_MS = 4000;
